@@ -1,1 +1,3 @@
-# EECS731-Project3
+## EECS731 Project3 - Weekend movie trip
+
+In this project, I perform clustering on given datasets for movie reviews with the goal of finding movies that are similar to one another. I specifically look at the average ratings and individual genres for each movie and perform PCA so that all results can be visualized. In the end, I find that some of the clustering methods can be used for meaningfully grouping movies together, while others fail to do so and instead find only a few clusters, thus limiting the effectiveness in this application.
