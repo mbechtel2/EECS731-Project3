@@ -13,7 +13,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 from sklearn.cluster import MeanShift
@@ -21,12 +20,11 @@ from sklearn.cluster import DBSCAN
 from sklearn.cluster import AgglomerativeClustering
 
 # Create the clustering models
-pca = PCA(n_components=2)
-kmeans_model = KMeans(n_clusters=18, random_state=0)
-gmm_model = GaussianMixture(n_components=18)
+kmeans_model = KMeans(n_clusters=2, random_state=0)
+gmm_model = GaussianMixture(n_components=2)
 ms_model = MeanShift()
 dbscan_model = DBSCAN()
-hac_model = AgglomerativeClustering(n_clusters=18)
+hac_model = AgglomerativeClustering(n_clusters=2)
 
 # Read the raw datasets
 movie_list = pd.read_csv("../data/raw/movies.csv")
@@ -70,44 +68,48 @@ movies_dataset = pd.DataFrame({"movieId":movie_ids,"rating":movie_ratings,
                                "Mystery":genre_matrix[12],"Romance":genre_matrix[13],
                                "Sci-Fi":genre_matrix[14],"Thriller":genre_matrix[15],
                                "War":genre_matrix[16],"Western":genre_matrix[17]}).dropna()
-movies_dataset.to_csv("../data/processed/movies_dataset.csv")                              
-             
-# Perform PCA on the new dataset so that the results can be visualized for each model             
-pca.fit(movies_dataset)
-pca_dataset = pca.transform(movies_dataset)  
+movies_dataset.to_csv("../data/processed/movies_dataset.csv")      
 
-# Create a grid of graphs so all results can be saved to a single image
-#   Only 5 models are tested, so the sixth graph is removed
-_,graphs = plt.subplots(2,3)  
-graphs[1,2].set_axis_off()    
+# For each genre
+for genre in genre_list:
+    # Print the current genre
+    print("Performing clustering on == {}".format(genre))
 
-# Perform K-means clustering and plot the results
-movies_pred = kmeans_model.fit_predict(pca_dataset)
-graphs[0,0].scatter(pca_dataset[:,0], pca_dataset[:,1], c=movies_pred)
-graphs[0,0].set_title("K-Means")
+    # Get the rating and genre columns from the overall dataset
+    genre_dataset = movies_dataset.loc[:,("rating",genre)]
 
-# Perform GMM clustering and plot the results
-movies_pred = gmm_model.fit_predict(pca_dataset)
-graphs[0,1].scatter(pca_dataset[:,0], pca_dataset[:,1], c=movies_pred)
-graphs[0,1].set_title("GMM") 
+    # Create a grid of graphs so all results can be saved to a single image
+    #   Only 5 models are tested, so the sixth graph is removed
+    _,graphs = plt.subplots(2,3)  
+    graphs[1,2].set_axis_off()    
 
-# Perform Mean-Shift clustering and plot the results
-movies_pred = ms_model.fit_predict(pca_dataset)
-graphs[0,2].scatter(pca_dataset[:,0], pca_dataset[:,1], c=movies_pred)
-graphs[0,2].set_title("Mean-Shift")
+    # Perform K-means clustering and plot the results
+    movies_pred = kmeans_model.fit_predict(genre_dataset)
+    graphs[0,0].scatter(genre_dataset.iloc[:,0], genre_dataset.iloc[:,1], c=movies_pred)
+    graphs[0,0].set_title("K-Means")
 
-# Perform DBSCAN clustering and plot the results
-movies_pred = dbscan_model.fit_predict(pca_dataset)
-graphs[1,0].scatter(pca_dataset[:,0], pca_dataset[:,1], c=movies_pred)
-graphs[1,0].set_title("DBSCAN") 
+    # Perform GMM clustering and plot the results
+    movies_pred = gmm_model.fit_predict(genre_dataset)
+    graphs[0,1].scatter(genre_dataset.iloc[:,0], genre_dataset.iloc[:,1], c=movies_pred)
+    graphs[0,1].set_title("GMM") 
 
-# Perform Hierarchical Agglomerative Clustering (HAC) and plot the results
-movies_pred = hac_model.fit_predict(pca_dataset)
-graphs[1,1].scatter(pca_dataset[:,0], pca_dataset[:,1], c=movies_pred)
-graphs[1,1].set_title("HAC")
+    # Perform Mean-Shift clustering and plot the results
+    movies_pred = ms_model.fit_predict(genre_dataset)
+    graphs[0,2].scatter(genre_dataset.iloc[:,0], genre_dataset.iloc[:,1], c=movies_pred)
+    graphs[0,2].set_title("Mean-Shift")
 
-# Increase the size of the graphs, then save and display them
-plt.gcf().set_size_inches((12.80,7.20), forward=False)
-plt.savefig("../visualizations/clustering_models.png", bbox_inches='tight', dpi=100)
-plt.show()    
+    # Perform DBSCAN clustering and plot the results
+    movies_pred = dbscan_model.fit_predict(genre_dataset)
+    graphs[1,0].scatter(genre_dataset.iloc[:,0], genre_dataset.iloc[:,1], c=movies_pred)
+    graphs[1,0].set_title("DBSCAN") 
+
+    # Perform Hierarchical Agglomerative Clustering (HAC) and plot the results
+    movies_pred = hac_model.fit_predict(genre_dataset)
+    graphs[1,1].scatter(genre_dataset.iloc[:,0], genre_dataset.iloc[:,1], c=movies_pred)
+    graphs[1,1].set_title("HAC")
+
+    # Increase the size of the graphs and then save them to the visualiztions/ directory
+    plt.gcf().set_size_inches((12.80,7.20), forward=False)
+    plt.savefig("../visualizations/{}.png".format(genre), bbox_inches='tight', dpi=100)
+    #plt.show()    
 
